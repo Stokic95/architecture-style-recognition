@@ -16,7 +16,9 @@ Prepoznati stil nekon arhitektonskog objekta često je lak zadatak za arhitekte,
 
 # Skup podataka
 
-Skup podataka moguće je prikupiti na internetu, koji je prepun slika građevina raznih arhitektonskih stilova. Za svaki stil potrebno je pronaći određeni broj slika građevina, a zatim od svake slike napraviti nekoliko sličnih, koje prikazuju građevinu sa te slike u drugačijim veličinama i sa različitim zakrivljenostima.
+Skup podataka moguće je prikupiti na internetu, koji je prepun slika građevina raznih arhitektonskih stilova. Za svaki stil potrebno je pronaći određeni broj slika građevina, a zatim od svake slike napraviti nekoliko sličnih, koje prikazuju građevinu sa te slike u drugačijim veličinama i sa različitim zakrivljenostima.<br>
+<br>
+Google drive sa materijalima: <a>https://drive.google.com/drive/u/1/folders/1bgVhjeXlksvBG3NPCzDyY_oWH3jg3W5a</a>
 
 # Metodologija
 
