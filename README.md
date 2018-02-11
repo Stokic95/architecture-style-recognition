@@ -24,6 +24,10 @@ Google drive sa materijalima: <a>https://drive.google.com/drive/u/1/folders/1bgV
 
 Potrebno je iskoristiti jedan od algoritama za izdvajanje objekata od pozadine kako bi se građevina dovela u fokus, a za to bi bio pogodan thresholding. Da bi se dobro uočile ivice građevine, planirano je da se koristi Canny operator. Takođe potrebna je i neuronska mreža za obučavanje za prepoznavanje stilova.
 
+Potrebno je instalirati određene pakete, u komandnu liniju je potrebno ukucati sledeće komande: <br>
+<b>pip3 install opencv-python</b> <br>
+<b>pip3 install pillow</b> <br>
+
 # Metod evaluacije
 
 Mjeriće se tačnost (Accuracy) prepoznavanja.
