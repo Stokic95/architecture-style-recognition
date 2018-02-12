@@ -49,12 +49,16 @@ def show_images(_image_path):
     _equalized_image = equalize_histogram(_grayscale_image)
     _threshold_image1 = threshold_image(_grayscale_image)
     _threshold_image2 = threshold_image(_equalized_image)
+    _canny_image1 = canny_edge_detection(_threshold_image1)
+    _canny_image2 = canny_edge_detection(_threshold_image2)
 
     cv2.imshow("original", _original_image)
     cv2.imshow("grayscale", _grayscale_image)
     cv2.imshow("equalized", _equalized_image)
     cv2.imshow("threshold", _threshold_image1)
     cv2.imshow("threshold after equalization", _threshold_image2)
+    cv2.imshow("canny1", _canny_image1)
+    cv2.imshow("canny2", _canny_image2)
     cv2.waitKey(0)
 
 def threshold_image(_image):
@@ -77,6 +81,11 @@ def closing_image(_image):
 
     _closing = cv2.morphologyEx(_image, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
     return _closing
+
+def canny_edge_detection(_image):
+    blur_image = cv2.GaussianBlur(_image, (5,5), 3)
+    canny_image = cv2.Canny(blur_image, 1, 255)
+    return canny_image
 
 if __name__ == '__main__':
 
