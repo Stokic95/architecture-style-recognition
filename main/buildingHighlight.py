@@ -51,6 +51,7 @@ def show_images(_image_path):
     _threshold_image2 = threshold_image(_equalized_image)
     _canny_image1 = canny_edge_detection(_threshold_image1)
     _canny_image2 = canny_edge_detection(_threshold_image2)
+    _canny_image3 = canny_image(_threshold_image2)
 
     cv2.imshow("original", _original_image)
     cv2.imshow("grayscale", _grayscale_image)
@@ -59,6 +60,8 @@ def show_images(_image_path):
     cv2.imshow("threshold after equalization", _threshold_image2)
     cv2.imshow("canny1", _canny_image1)
     cv2.imshow("canny2", _canny_image2)
+    cv2.imshow("canny3", _canny_image3)
+    #cv2.imshow("canny4", canny_image(threshold_image(_canny_image3)))
     cv2.waitKey(0)
 
 def threshold_image(_image):
@@ -82,10 +85,23 @@ def closing_image(_image):
     _closing = cv2.morphologyEx(_image, cv2.MORPH_CLOSE, np.ones((3,3),np.uint8))
     return _closing
 
+
 def canny_edge_detection(_image):
     blur_image = cv2.GaussianBlur(_image, (5,5), 3)
     canny_image = cv2.Canny(blur_image, 1, 255)
     return canny_image
+
+
+def canny_image(_image):
+
+    _sigma = 0.33
+    _v = np.median(_image)
+
+    _lower = int(max(0, (1.0 - _sigma) * _v))
+    _upper = int(min(255, (1.0 + _sigma) * _v))
+
+    _canny_image = cv2.Canny(_image, _lower, _upper, True)
+    return _canny_image
 
 if __name__ == '__main__':
 
