@@ -64,7 +64,7 @@ def show_images(_image_path):
     #cv2.imshow("canny4", canny_image(threshold_image(_canny_image3)))
     cv2.waitKey(0)
 
-def threshold_image(_image):
+def threshold_image(_image, _method=cv2.ADAPTIVE_THRESH_GAUSSIAN_C, _block_size=3, _constant=12):
 
     # odvaja zgradu od pozadine
     # argument je slika (ne putanja)
@@ -74,7 +74,7 @@ def threshold_image(_image):
     # param 3 - metod
     # param 5 - velicina bloka za pretragu (mora biti neparan broj veci od 1)
     # param 6 - parametar koji utice na pretragu, proizvoljan
-    _threshold_image = cv2.adaptiveThreshold(_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 3, 12)
+    _threshold_image = cv2.adaptiveThreshold(_image, 255, _method, cv2.THRESH_BINARY, _block_size, _constant)
     return _threshold_image
 
 def closing_image(_image):
@@ -92,9 +92,8 @@ def canny_edge_detection(_image):
     return canny_image
 
 
-def canny_image(_image):
+def canny_image(_image, _sigma=0.33):
 
-    _sigma = 0.33
     _v = np.median(_image)
 
     _lower = int(max(0, (1.0 - _sigma) * _v))
