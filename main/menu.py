@@ -49,7 +49,7 @@ def process_picture(_path):
         elif _option == "8":
             show_two_cannies(_path)
         elif _option == "9":
-            resize_image(_path)
+            show_resized_image(_path)
         elif _option == "0":
             main_menu()
         else:
@@ -133,7 +133,7 @@ def show_two_grayscales(_path):
     process_picture(_path)
 
 
-def resize_image(_path):
+def show_resized_image(_path):
     _image = open_grayscale_image(_path)
     _image = cv2.resize(_image, (50, 50))
     cv2.imshow("resized", _image)
