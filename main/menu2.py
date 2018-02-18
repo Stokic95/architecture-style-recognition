@@ -1,4 +1,4 @@
-from main.buildingHighlight2 import *
+from main.buildingHighlight import *
 import os.path
 
 
@@ -15,7 +15,6 @@ def main_menu():
             main_menu()
 
         process_picture(_path)
-
 
 def process_picture(_path):
 
@@ -56,24 +55,20 @@ def process_picture(_path):
         else:
             process_picture(_path)
 
-
 def show_original(_path):
     cv2.imshow("Original", cv2.imread(_path))
     cv2.waitKey(0)
     process_picture(_path)
-
 
 def show_grayscale(_path):
     cv2.imshow("Grayscale", open_grayscale_image(_path))
     cv2.waitKey(0)
     process_picture(_path)
 
-
 def show_grayscale_after_histogram_equalization(_path):
     cv2.imshow("Grayscale after histogram equalization", equalize_histogram(open_grayscale_image(_path)))
     cv2.waitKey(0)
     process_picture(_path)
-
 
 def show_threshold_image(_path):
     _option = input("Method (0 for GAUSSIAN, 1 for MEAN)(GAUSSIAN is default): ")
@@ -112,13 +107,11 @@ def show_canny_image(_path):
     cv2.waitKey(0)
     process_picture(_path)
 
-
 def show_canny_on_blur_image(_path):
     cv2.imshow("Canny on blur image", canny_edge_detection(threshold_image(equalize_histogram(
         open_grayscale_image(_path)))))
     cv2.waitKey(0)
     process_picture(_path)
-
 
 def show_two_cannies(_path):
     _image = threshold_image(equalize_histogram(open_grayscale_image(_path)))
@@ -126,24 +119,13 @@ def show_two_cannies(_path):
     cv2.waitKey(0)
     process_picture(_path)
 
-
 def show_two_grayscales(_path):
     _image = open_grayscale_image(_path)
     cv2.imshow("Grayscale and grayscale after histogram equalization", np.hstack((_image, equalize_histogram(_image))))
     cv2.waitKey(0)
     process_picture(_path)
 
-
-# def resize_image(_path):
-#     _image = open_grayscale_image(_path)
-#     _image = cv2.resize(_image, (50, 50))
-#     cv2.imshow("resized", _image)
-#     cv2.waitKey(0)
-#     process_picture(_path)
-
-
 def prepare_image(_path, _size):
-
     _img = cv2.imread(_path)
     _a = []
     _a.append(_img)
@@ -153,8 +135,6 @@ def prepare_image(_path, _size):
     _result = []
 
     for _image in _augmanted_images:
-
-        #_image = open_grayscale_image(_path)
         _image = cv2.cvtColor(_image,cv2.COLOR_BGR2GRAY)
         _image = equalize_histogram(_image)
         _image = threshold_image(_image)
@@ -180,7 +160,6 @@ def prepare_image(_path, _size):
                 _result.append(part)
 
     return _result
-
 
 def prepare_inputs():
     _gothic_training_input_files = load_data("../data/training/gothic_training")
@@ -231,7 +210,6 @@ def prepare_inputs():
 
     return _inputs, minimal
 
-
 def prepare_test_inputs():
     _gothic_training_input_files = load_data("../data/test/gothic_test")
     _modern_training_input_files = load_data("../data/test/modern_test")
@@ -249,7 +227,6 @@ def prepare_test_inputs():
             _gothic_training_inputs.append(scale_to_range(matrix_to_vector(part)))
             cv2.imwrite("../data/test/network_inputs/gothic/" + name.split('.')[0] + str(i) + ".jpg", part)
 
-
     for name in _modern_training_input_files:
         i = 0
         print("preparing test modern: " + str(name))
@@ -266,7 +243,6 @@ def prepare_test_inputs():
             _renaissance_training_inputs.append(scale_to_range(matrix_to_vector(part)))
             cv2.imwrite("../data/test/network_inputs/renaissance/" + name.split('.')[0] + str(i) + ".jpg", part)
 
-
     sizes = []
     sizes.append(len(_gothic_training_inputs))
     sizes.append(len(_modern_training_inputs))
@@ -282,7 +258,6 @@ def prepare_test_inputs():
     print("test minimal: " + str(minimal))
 
     return _inputs, minimal
-
 
 def augment_data(dataset, augementation_factor=1, use_random_rotation=True, use_random_shear=True, use_random_shift=True, use_random_zoom=True):
 	augmented_image = []
@@ -307,97 +282,55 @@ def augment_data(dataset, augementation_factor=1, use_random_rotation=True, use_
 
 	return np.array(augmented_image)
 
-def network_training_inputs():
-
+def network_training_inputs(_size):
     _gothic_training_files = load_data("../data/training/network_inputs/gothic")
     _modern_training_files = load_data("../data/training/network_inputs/modern")
     _renaiassance_training_files = load_data("../data/training/network_inputs/renaissance")
 
     _inputs = []
 
-    _gothic_training_inputs = []
-
     for _name in _gothic_training_files:
         _im = cv2.imread("../data/training/network_inputs/gothic/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
-        vektor = scale_to_range(_im)
-        _inputs.append(vektor)
-
-
-    _modern_training_inputs = []
+        _inputs.append(scale_to_range(_im))
 
     for _name in _modern_training_files:
         _im = cv2.imread("../data/training/network_inputs/modern/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
         _inputs.append(scale_to_range(_im))
 
-
-
-    _renaissance_training_inputs = []
-
     for _name in _renaiassance_training_files:
         _im = cv2.imread("../data/training/network_inputs/renaissance/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
-        vektor = scale_to_range(_im)
-        _inputs.append(vektor)
+        _inputs.append(scale_to_range(_im))
 
-    _inputs = np.array(_inputs).reshape(-1, 80, 80, 1)
-    print (np.array(_inputs).shape)
+    _inputs = np.array(_inputs).reshape(-1, _size, _size, 1)
     return _inputs
 
-
-def network_test_inputs():
+def network_test_inputs(_size):
     _gothic_test_files = load_data("../data/test/network_inputs/gothic")
     _modern_test_files = load_data("../data/test/network_inputs/modern")
     _renaiassance_test_files = load_data("../data/test/network_inputs/renaissance")
 
     _inputs = []
 
-    _gothic_test_inputs = []
-
     for _name in _gothic_test_files:
         _im = cv2.imread("../data/test/network_inputs/gothic/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
-        vektor = scale_to_range(_im)
-        _inputs.append(vektor)
-
-
-    _modern_test_inputs = []
+        _inputs.append(scale_to_range(_im))
 
     for _name in _modern_test_files:
         _im = cv2.imread("../data/test/network_inputs/modern/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
         _inputs.append(scale_to_range(_im))
 
-
-    _renaissance_test_inputs = []
-
     for _name in _renaiassance_test_files:
         _im = cv2.imread("../data/test/network_inputs/renaissance/" + _name)
         _im = cv2.cvtColor(_im, cv2.COLOR_BGR2GRAY)
-        vektor = scale_to_range(_im)
-        _inputs.append(vektor)
-    _inputs = np.array(_inputs).reshape(-1, 80, 80, 1)
-    print(np.array(_inputs).shape)
+        _inputs.append(scale_to_range(_im))
+
+    _inputs = np.array(_inputs).reshape(-1, _size, _size, 1)
     return _inputs
 
 if __name__ == '__main__':
-    #main_menu()
-    prepare_inputs()
-    prepare_test_inputs()
-
-    #network_training_inputs()
-
-    #inputs = network_test_inputs()
-    #print(inputs[0])
-
-    # image1 = cv2.imread("../data/test/gothic_test/slaneCastle1.jpg")
-    # a = []
-    # a.append(image1)
-    # images = augment_data(np.array(a))
-    # i = 0
-    # for image in images:
-    #     i = i + 1
-    #     cv2.imshow(str(i), image)
-    #
-    # cv2.waitKey(0)
+    main_menu()
