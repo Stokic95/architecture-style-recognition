@@ -1,6 +1,11 @@
 from main.buildingHighlight import *
 import os.path
-
+from keras.models import Sequential,Input,Model
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+from keras.layers.normalization import BatchNormalization
+from keras.layers.advanced_activations import LeakyReLU
+import keras
 
 def main_menu():
     print("1 - process picture")
@@ -8,7 +13,7 @@ def main_menu():
     _option = input("Option: ")
 
     if _option == "1":
-        _path = "../data/training/" + input("Picture path: ")
+        _path = "../data/" + input("Picture path: ")
 
         if not os.path.isfile(_path):
             print("File not found")
@@ -28,6 +33,7 @@ def process_picture(_path):
         print("7 - show canny on blur image")
         print("8 - show canny and canny on blur image")
         print("9 - split into pieces")
+        print("10 - predict for image")
         print("0 - back")
 
         _option = input("Option: ")
@@ -49,8 +55,10 @@ def process_picture(_path):
         elif _option == "8":
             show_two_cannies(_path)
         elif _option == "9":
-            prepare_image2(_path, 280)
+            prepare_image2(_path, 240)
             #resize_image(_path)
+        elif _option == "10":
+            predict_for_image(_path, 240)
         elif _option == "0":
             main_menu()
         else:
@@ -412,14 +420,72 @@ def prepare_image2(_path, _size):
         if sum(scale_to_range(matrix_to_vector(part))) > (_size*_size)/64:
             _result.append(part)
 
-    i = 0
-    for part in _result:
-        i = i + 1
-        cv2.imshow(str(i), part)
-
-    cv2.waitKey(0)
+    # i = 0
+    # for part in _result:
+    #     i = i + 1
+    #     cv2.imshow(str(i), part)
+    #
+    # cv2.waitKey(0)
 
     return _result
+
+def predict_for_image(_path, _size):
+    _images = prepare_image2(_path, _size)
+
+    if len(_images) == 0:
+        print("Cant recognize")
+        return
+
+    _vector = []
+
+
+    for _im in _images:
+        _vector.append(np.array(scale_to_range(_im)))
+
+    _inputs = np.array(_vector).reshape(-1, 80, 80, 1)
+    styles = ['gothic', 'modern', 'renaissance']
+    _ann = create_ann2()
+    _ann.load_weights("weights")
+    print("started prediction..")
+    result = _ann.predict(np.array(_inputs, np.float32))
+    print("prediction completed")
+
+    got = 0
+    mod = 0
+    ren = 0
+
+    res = display_result(result, styles)
+
+    for s in res:
+        if s == "gothic":
+            got = got + 1
+        elif s == "modern":
+            mod = mod + 1
+        else:
+            ren = ren + 1
+
+    print("Gothic: " + str(((got+0.0)/len(res))*100) + "%")
+    print("Modern: " + str(((mod+0.0)/len(res))*100) + "%")
+    print("Renaissance: " + str(((ren+0.0)/len(res))*100) + "%")
+
+    print(display_result(result, styles))
+
+def create_ann2():
+    ann = Sequential()
+    ann.add(Conv2D(32, kernel_size=(3, 3), activation='linear', input_shape=(80, 80,1), padding='same'))
+    ann.add(keras.layers.PReLU(alpha_initializer='zeros', alpha_regularizer=None, alpha_constraint=None, shared_axes=None))
+    ann.add(MaxPooling2D((2, 2), padding='same'))
+    ann.add(Conv2D(64, (3, 3), activation='linear', padding='same'))
+    ann.add(keras.layers.PReLU(alpha_initializer='zeros', alpha_regularizer=None, alpha_constraint=None, shared_axes=None))
+    ann.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    ann.add(Conv2D(128, (3, 3), activation='linear', padding='same'))
+    ann.add(keras.layers.PReLU(alpha_initializer='zeros', alpha_regularizer=None, alpha_constraint=None, shared_axes=None))
+    ann.add(MaxPooling2D(pool_size=(2, 2), padding='same'))
+    ann.add(Flatten())
+    ann.add(Dense(128, activation='linear'))
+    ann.add(keras.layers.PReLU(alpha_initializer='zeros', alpha_regularizer=None, alpha_constraint=None, shared_axes=None))
+    ann.add(Dense(3, activation='softmax'))
+    return ann
 
 if __name__ == '__main__':
     main_menu()
