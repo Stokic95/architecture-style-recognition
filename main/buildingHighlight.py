@@ -5,9 +5,11 @@ from keras.models import Sequential
 from keras.layers.core import Dense,Activation
 from keras.layers import  LSTM
 from keras.optimizers import SGD
+from keras.layers.core import Dense as Dns
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import tensorflow as tf
 import time
+from main.menu import *
 
 def open_grayscale_image(_image_path):
     # otvara i vraca crno-bijelu sliku
@@ -128,11 +130,11 @@ def prepare_for_ann(inputs):
         ready_for_ann.append(matrix_to_vector(scale_to_range(input)))
     return ready_for_ann
 
-def create_ann(size):
+def create_ann(_size, _pixels):
     ann = Sequential()
-    ann.add(LSTM(128, input_shape=(240,4900), activation ='sigmoid'))
-    ann.add(Dense(128,activation='sigmoid'))
-    ann.add(Dense(128,activation='sigmoid'))
+    ann.add(LSTM(128, input_shape=(_size, _pixels), activation ='tanh'))
+    ann.add(Dense(64,activation='tanh'))
+    ann.add(Dense(64,activation='tanh'))
     ann.add(Dense(3, activation = 'sigmoid'))
     return ann
 
@@ -141,8 +143,24 @@ def train_ann(ann, X_train, y_train):
     y_train = np.array(y_train, np.float32)
     sgd = SGD(lr=0.01, momentum=0.9)
     ann.compile(loss='mean_squared_error', optimizer=sgd)
-    ann.fit(X_train, y_train, epochs=100, batch_size=32, verbose=0, shuffle=False)
+    ann.fit(X_train, y_train, epochs=50, batch_size=32, verbose=1, shuffle=False)
     return ann
+
+# def create_ann2(_size, _pixels):
+#     ann = Sequential()
+#     ann.add(LSTM(128, input_shape=(_size, _pixels), activation ='tanh'))
+#     ann.add(Dense(64,activation='tanh'))
+#     ann.add(Dense(64,activation='tanh'))
+#     ann.add(Dense(1, activation = 'sigmoid'))
+#     return ann
+#
+# def train_ann2(ann, X_train, y_train):
+#     X_train = np.array(X_train, np.float32)
+#     y_train = np.array(y_train, np.float32)
+#     sgd = SGD(lr=0.01, momentum=0.9)
+#     ann.compile(loss='mean_squared_error', optimizer=sgd)
+#     ann.fit(X_train, y_train, epochs=3, batch_size=None, verbose=1, shuffle=False)
+#     return ann
 
 def winner(output):
     return max(enumerate(output), key=lambda x: x[1])[0]
@@ -159,136 +177,176 @@ def load_data(path):
         data.append(i)
     return data
 
+
+def training():
+
+    # # putanje
+    # gothic_training_path = "../data/training/gothic_training"
+    # modern_training_path = "../data/training/modern_training"
+    # renaissance_training_path = "../data/training/renaissance_training"
+    #
+    # # ucitaj trening fajlove
+    # gothic_training_data = load_data(gothic_training_path)
+    # modern_training_data = load_data(modern_training_path)
+    # renaissance_training_data = load_data(renaissance_training_path)
+    #
+    # ann_inputs = []  # ulazni vektor za neuronsku mrezu
+    # inputs_gothic_train = []  # obradjene trening slike gotike
+    # inputs_modern_train = []  # obradjene trening slike moderne
+    # inputs_renaissance_train = []  # obradjene trening slike renesanse
+    #
+    # # ucitaj svaku sliku za treniranje gotike
+    # for path in gothic_training_data:
+    #     print("preparing for gothic training: " + path)
+    #     _grayscale_image = open_grayscale_image(gothic_training_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_gothic_train.append(resize_image(_canny_image, (70, 70)))
+    #
+    # # ucitaj svaku sliku za treniranje moderne
+    # for path in modern_training_data:
+    #     print("preparing for modern training: " + path)
+    #     _grayscale_image = open_grayscale_image(modern_training_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_modern_train.append(resize_image(_canny_image, (70, 70)))
+    #
+    # # ucitaj svaku sliku za treniranje renesanse
+    # for path in renaissance_training_data:
+    #     print("preparing for renaissance training: " + path)
+    #     _grayscale_image = open_grayscale_image(renaissance_training_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_renaissance_train.append(resize_image(_canny_image, (70, 70)))
+    #
+    # # pripremi trening podatke za ulaz u mrezu
+    # print("preparing training inputs for ann..")
+    # ann_inputs_gothic_train = prepare_for_ann(inputs_gothic_train)
+    # ann_inputs_modern_train = prepare_for_ann(inputs_modern_train)
+    # ann_inputs_renaissance_train = prepare_for_ann(inputs_renaissance_train)
+    #
+    # # dodaj sva tri ulaza u jedan vektor
+    # ann_inputs.append(ann_inputs_gothic_train)
+    # ann_inputs.append(ann_inputs_modern_train)
+    # ann_inputs.append(ann_inputs_renaissance_train)
+
+    ann_inputs = network_training_inputs()
+
+    # trenirani izlaz, vraca: [ [100], [010], [001] ]
+    ann_target_outputs = convert_output(styles)
+
+    # kreiraj neuronsku mrezu sa 240 ulaza
+    print("creating ann..")
+    ann = create_ann(4282, 6400)
+    print("ann created")
+
+    # ucitaj sacuvane tezine
+    print("loading weights..")
+    ann.load_weights("weightsT")
+    print("weights loaded")
+
+    # treniraj mrezu
+    print("started training..")
+    ann = train_ann(ann, ann_inputs, ann_target_outputs)
+    print("training completed")
+
+    # sacuvaj tezine
+    print("saving weights to file..")
+    ann.save_weights("weights3")
+    print("weights saved to file")
+
+    return ann
+
+
 if __name__ == '__main__':
-
-    start = time.time()
-
-    gothic_path = "../data/training/gothic_training"
-    modern_path = "../data/training/modern_training"
-    renaissance_path = "../data/training/renaissance_training"
-    gothic_test_path = "../data/training/gothic_test"
-    modern_test_path = "../data/training/modern_test"
-    renaissance_test_path = "../data/training/renaissance_test"
-    gothic_data = load_data(gothic_path)
-    modern_data = load_data(modern_path)
-    renaissance_data = load_data(renaissance_path)
-    gothic_test_data = load_data(gothic_test_path)
-    modern_test_data = load_data(modern_test_path)
-    renaissance_test_data = load_data(renaissance_test_path)
-
-
-    ann_inputs = []
-    ann_inputs_test = []
-    inputs_gothic_train = []
-    inputs_modern_train = []
-    inputs_renaissance_train = []
-    inputs_gothic_test = []
-    inputs_modern_test = []
-    inputs_renaissance_test = []
 
     styles = ['gothic', 'modern', 'renaissance']
 
-    a = 0
-    for path in gothic_data:
-        _grayscale_image = open_grayscale_image(gothic_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_gothic_train.append(resize_image(_canny_image, (70,70)))
+    # pocni da brojis vrijeme
+    start = time.time()
 
-    for path in modern_data:
-        _grayscale_image = open_grayscale_image(modern_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_modern_train.append(resize_image(_canny_image, (70, 70)))
+    gothic_test_path = "../data/test/gothic_test"
+    modern_test_path = "../data/test/modern_test"
+    renaissance_test_path = "../data/test/renaissance_test"
 
-    for path in renaissance_data:
-        _grayscale_image = open_grayscale_image(renaissance_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_renaissance_train.append(resize_image(_canny_image, (70, 70)))
+    '''
+        Treniranje
+    '''
 
+    #ann = training()
+    ann = create_ann(4282, 6400)
+    ann.load_weights("weightsT")
 
-    ann_inputs_gothic_train = prepare_for_ann(inputs_gothic_train)
-    ann_inputs_modern_train = prepare_for_ann(inputs_modern_train)
-    ann_inputs_renaissance_train = prepare_for_ann(inputs_renaissance_train)
-    ann_inputs.append(ann_inputs_gothic_train)
-    ann_inputs.append(ann_inputs_modern_train)
-    ann_inputs.append(ann_inputs_renaissance_train)
+    '''
+        Testiranje
+    '''
 
-    ann_target_outputs = convert_output(styles)
-    ann = create_ann(240)
-   # ann.load_weights('traindata')
-    ann = train_ann(ann, ann_inputs, ann_target_outputs)
-    #result = ann.predict(np.array(ann_inputs, np.float32))
-   # ann.save_weights('traindata')
+    # ann_inputs_test = [] # ulazni vektor u mrezu za testiranje
+    # inputs_gothic_test = [] # obradjene test slike za gotiku
+    # inputs_modern_test = [] # obradjene test slike za modernu
+    # inputs_renaissance_test = [] # obradjene test slike za renesansu
+    #
+    # # ucitaj test fajlove
+    # gothic_test_data = load_data(gothic_test_path)
+    # modern_test_data = load_data(modern_test_path)
+    # renaissance_test_data = load_data(renaissance_test_path)
+    #
+    # # obradi slike za gotiku
+    # for path in gothic_test_data:
+    #     print("preparing for gothic test: " + path)
+    #     _grayscale_image = open_grayscale_image(gothic_test_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_gothic_test.append(resize_image(_canny_image, (60,60)))
+    #
+    # # obradi slike za modernu
+    # for path in modern_test_data:
+    #     print("preparing for modern test: " + path)
+    #     _grayscale_image = open_grayscale_image(modern_test_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_modern_test.append(resize_image(_canny_image, (60, 60)))
+    #
+    # # obradi slike za renesansu
+    # for path in renaissance_test_data:
+    #     print("preparing for renaissance test: " + path)
+    #     _grayscale_image = open_grayscale_image(renaissance_test_path + '/' + path)
+    #     _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
+    #     _canny_image = canny_edge_detection(_treshold_image)
+    #     inputs_renaissance_test.append(resize_image(_canny_image, (60, 60)))
+    #
+    # # pripremi ulaze za mrezu
+    # print("preparing test inputs for ann..")
+    # ann_inputs_gothic_test = prepare_for_ann(inputs_gothic_test)
+    # ann_inputs_modern_test = prepare_for_ann(inputs_modern_test)
+    # ann_inputs_renaissance_test = prepare_for_ann(inputs_renaissance_test)
+    #
+    # # smjesti ulaze u jedan vektor
+    # ann_inputs_test.append(ann_inputs_gothic_test)
+    # ann_inputs_test.append(ann_inputs_modern_test)
+    # ann_inputs_test.append(ann_inputs_renaissance_test)
 
-    for path in gothic_test_data:
-        _grayscale_image = open_grayscale_image(gothic_test_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_gothic_test.append(resize_image(_canny_image, (70,70)))
+    ann_inputs_test = network_test_inputs()
 
-    for path in modern_test_data:
-        _grayscale_image = open_grayscale_image(modern_test_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_modern_test.append(resize_image(_canny_image, (70, 70)))
+    # kreiraj mrezu za testiranje sa 60 ulaza
+    print("creating test ann..")
+    annTest = create_ann(850, 6400)
+    print("test ann created")
 
-    for path in renaissance_test_data:
-        _grayscale_image = open_grayscale_image(renaissance_test_path + '/' + path)
-        _treshold_image = threshold_image(equalize_histogram(_grayscale_image))
-        _canny_image = canny_edge_detection(_treshold_image)
-        inputs_renaissance_test.append(resize_image(_canny_image, (70, 70)))
-
-
-    ann_inputs_gothic_test = prepare_for_ann(inputs_gothic_test)
-    ann_inputs_modern_test = prepare_for_ann(inputs_modern_test)
-    ann_inputs_renaissance_test = prepare_for_ann(inputs_renaissance_test)
-    ann_inputs_test.append(ann_inputs_gothic_test)
-    ann_inputs_test.append(ann_inputs_modern_test)
-    ann_inputs_test.append(ann_inputs_renaissance_test)
-
-
-
-
-    annTest = Sequential()
-    annTest.add(LSTM(128, input_shape=(60, 4900), activation='sigmoid'))
-    annTest.add(Dense(128, activation='sigmoid'))
-    annTest.add(Dense(128, activation='sigmoid'))
-    annTest.add(Dense(3, activation='sigmoid'))
+    # postavi tezine mreze za treniranje
     annTest.set_weights(ann.get_weights())
 
+    # predvidi izlaz za poslati ulaz
+    print("started prediction..")
     result = annTest.predict(np.array(ann_inputs_test, np.float32))
+    print("prediction completed")
+
+    # stampaj rezultat
     print(display_result(result, styles))
+
+    # istampaj vrijeme
     end = time.time()
     print(end - start)
+
+    # pokazi rezultat
     print(result)
-
-    tri_slike = []
-    tri_slike.append(ann_inputs_gothic_test[0])
-    tri_slike.append(ann_inputs_modern_test[0])
-    tri_slike.append(ann_inputs_renaissance_train[0])
-    annTest1 = Sequential()
-    annTest1.add(LSTM(128, input_shape=(1, 4900), activation='sigmoid'))
-    annTest1.add(Dense(128, activation='sigmoid'))
-    annTest1.add(Dense(128, activation='sigmoid'))
-    annTest1.add(Dense(3, activation='sigmoid'))
-    annTest1.set_weights(ann.get_weights())
-
-    vrijednost = annTest1.predict(np.array(tri_slike), np.float32)
-    print(vrijednost)
-
-
-   #show_images(path)
-
-    #image = open_grayscale_image(path)
-
-    # equalize histogram of the image
-    #equalized_image = equalize_histogram(image)
-
-    # threshold image
-    #threshold_image = threshold_image(image)
-
-    #cv2.imshow("Equalized image", equalized_image)
-    #cv2.imshow("Threshold image", threshold_image)
-    #cv2.waitKey(0)
